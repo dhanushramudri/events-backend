@@ -1,4 +1,10 @@
+# dependencies
 node_modules/
+
+# dotenv
 .env
+
+# build
 dist/
 .cache/
+coverage/
