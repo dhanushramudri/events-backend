@@ -1,5 +1,3 @@
-// models/event.model.js
-
 const mongoose = require("mongoose");
 
 const eventSchema = new mongoose.Schema({
@@ -59,6 +57,11 @@ const eventSchema = new mongoose.Schema({
   location: {
     type: String,
     required: true,
+  },
+  image: {
+    // Added the image field
+    type: String,
+    required: false, // Optional; set to true if required
   },
 });
 

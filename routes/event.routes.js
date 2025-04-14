@@ -66,6 +66,7 @@ router.get("/admin/events", authenticate, isAdmin, async (req, res) => {
 
 // Create event (admin only)
 router.post("/admin/events", authenticate, isAdmin, async (req, res) => {
+  console.log("Creating event with data:", req.body);
   try {
     const newEvent = new Event({
       ...req.body,
