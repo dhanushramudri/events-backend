@@ -54,6 +54,10 @@ try {
   process.exit(1);
 }
 
+app.get("/", (req, res) => {
+  res.send("Hello from the backend!");
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
