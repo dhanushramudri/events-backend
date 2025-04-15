@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 const Event = require("../models/event.model");
 const User = require("../models/user.model");
+const Participant = require("../models/participant.model");
 const { authenticate, isAdmin } = require("../middleware/auth.middleware");
 
 // Get all events (public)
@@ -213,6 +214,10 @@ router.post("/favorites/:id", authenticate, async (req, res) => {
 
 // Register for an Event (user only)
 router.post("/register/:id", authenticate, async (req, res) => {
+  // console.log("Registering for event with ID:", req.params.id);
+  // console.log("User ID:", req.user.id);
+  // console.log("User name:", req.user.name);
+  // console.log("User email:", req.user.email);
   try {
     const event = await Event.findById(req.params.id);
     if (!event) {
@@ -350,22 +355,28 @@ router.get(
   }
 );
 // Join waitlist for an event (user only)
-router.post("/:id/waitlist", async (req, res) => {
+router.post("/:id/waitlist", authenticate, async (req, res) => {
+  // console.log("req.user in waitlist", req.user); // Log the user object for debugging
   try {
-    console.log("Joining waitlist for event:", req.params.id);
+    // console.log("req.user", req.body); 
     const event = await Event.findById(req.params.id);
     const events = await Event.find({});
-    console.log("All events:", events); // Log all events for debugging
+    console.log(" event:", event); // Log all events for debugging
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
 
     // Check if already registered
+
+
     const existing = await Participant.findOne({
       eventId: event._id,
       userId: req.user.id,
     });
+const participants = await Participant.find({});
+    console.log("participants", participants); // Log all participants for debugging
+    // console.log("existing", existing); // Log the existing registration for debugging
 
     if (existing) {
       return res
@@ -381,8 +392,14 @@ router.post("/:id/waitlist", async (req, res) => {
       email: req.user.email,
       status: "waitlisted",
     });
-
-    await waitlistEntry.save();
+try {
+  await waitlistEntry.save();
+  console.log("Waitlist entry saved:", waitlistEntry); // Log the saved waitlist entry for debugging
+  
+} catch (error) {
+  console.log("Error saving waitlist entry:", error); // Log any errors during save
+  
+}
 
     // Optionally, store waitlist references in the event document if needed
     // event.waitlist.push(waitlistEntry._id);

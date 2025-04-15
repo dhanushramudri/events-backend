@@ -48,24 +48,6 @@ async function handleParticipantCancellation(eventId, participantId) {
         event.participantsCount += 1;
         await event.save();
 
-        // Send notification email to the approved participant
-        try {
-          const template = emailTemplates.registrationConfirmation(
-            event.title,
-            nextInLine.name
-          );
-
-          await sendEmail(
-            nextInLine.email,
-            template.subject,
-            template.text,
-            template.html
-          );
-        } catch (emailError) {
-          console.error("Error sending auto-approval email:", emailError);
-          // Don't fail the process if email fails
-        }
-
         return {
           success: true,
           autoApproved: nextInLine,
@@ -87,10 +69,12 @@ async function handleParticipantCancellation(eventId, participantId) {
 }
 
 // Register for an event (public)
-router.post("/events/:id/register", async (req, res) => {
-  try {
-    const { name, email } = req.body;
+router.post("/events/:id/register", authenticate, async (req, res) => {
+  console.log("User  details are in register:", req.user);
+  const { name, email } = req.user;
+  console.log("user , email", name, email); 
 
+  try {
     if (!name || !email) {
       return res.status(400).json({ message: "Name and email are required" });
     }
@@ -157,23 +141,12 @@ router.post("/events/:id/register", async (req, res) => {
 
     await newParticipant.save();
 
+
+
     // Update event participant count if approved
     if (status === "approved") {
       event.participantsCount += 1;
       await event.save();
-    }
-
-    // Send confirmation email
-    try {
-      const template =
-        status === "approved"
-          ? emailTemplates.registrationConfirmation(event.title, name)
-          : emailTemplates.registrationPending(event.title, name);
-
-      await sendEmail(email, template.subject, template.text, template.html);
-    } catch (emailError) {
-      console.error("Error sending registration email:", emailError);
-      // Don't fail the registration if email fails
     }
 
     res.status(201).json({
@@ -276,23 +249,6 @@ router.post(
         await pendingParticipants[i].save();
       }
 
-      // Send approval notification email
-      try {
-        const template = emailTemplates.registrationConfirmation(
-          event.title,
-          participant.name
-        );
-        await sendEmail(
-          participant.email,
-          template.subject,
-          template.text,
-          template.html
-        );
-      } catch (emailError) {
-        console.error("Error sending approval email:", emailError);
-        // Don't fail the approval if email fails
-      }
-
       res.json({ participant });
     } catch (error) {
       res.status(500).json({ message: "Server error", error: error.message });
@@ -354,33 +310,6 @@ router.post(
         await pendingParticipants[i].save();
       }
 
-      // Send rejection notification email
-      try {
-        const template = {
-          subject: `Registration Update: ${event.title}`,
-          text: `Hello ${participant.name},\n\nWe regret to inform you that your registration for ${event.title} has been withdrawn. If you believe this is an error, please contact the event organizer.\n\nBest regards,\nEvent Management Team`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Registration Update</h2>
-              <p>Hello ${participant.name},</p>
-              <p>We regret to inform you that your registration for <strong>${event.title}</strong> has been withdrawn.</p>
-              <p>If you believe this is an error, please contact the event organizer.</p>
-              <p>Best regards,<br>Event Management Team</p>
-            </div>
-          `,
-        };
-
-        await sendEmail(
-          participant.email,
-          template.subject,
-          template.text,
-          template.html
-        );
-      } catch (emailError) {
-        console.error("Error sending rejection email:", emailError);
-        // Don't fail the rejection if email fails
-      }
-
       res.json({ participant });
     } catch (error) {
       res.status(500).json({ message: "Server error", error: error.message });
@@ -430,26 +359,8 @@ router.post(
         });
       }
 
-      // Send email to each participant
-      const emailPromises = participants.map((participant) => {
-        const template = emailTemplates.customNotification(
-          event.title,
-          participant.name,
-          message
-        );
-
-        return sendEmail(
-          participant.email,
-          template.subject,
-          template.text,
-          template.html
-        );
-      });
-
-      await Promise.all(emailPromises);
-
       res.json({
-        message: "Notifications sent successfully",
+        message: "Notifications processed successfully",
         recipients: participants.length,
       });
     } catch (error) {
@@ -528,33 +439,6 @@ router.delete(
       // Remove the participant
       await Participant.deleteOne({ _id: participant._id });
 
-      // Send notification email to the removed participant
-      try {
-        const template = {
-          subject: `Registration Removed: ${event.title}`,
-          text: `Hello ${participant.name},\n\nYour registration for ${event.title} has been removed. If you believe this is an error, please contact the event organizer.\n\nBest regards,\nEvent Management Team`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Registration Removed</h2>
-              <p>Hello ${participant.name},</p>
-              <p>Your registration for <strong>${event.title}</strong> has been removed.</p>
-              <p>If you believe this is an error, please contact the event organizer.</p>
-              <p>Best regards,<br>Event Management Team</p>
-            </div>
-          `,
-        };
-
-        await sendEmail(
-          participant.email,
-          template.subject,
-          template.text,
-          template.html
-        );
-      } catch (emailError) {
-        console.error("Error sending removal email:", emailError);
-        // Don't fail the removal if email fails
-      }
-
       // If this was an approved participant, auto-approve the next in line
       let autoApprovalResult = { success: false };
 
@@ -592,5 +476,21 @@ router.delete(
     }
   }
 );
+
+
+// get all participants for the user 
+router.get("/user/participants", authenticate, async (req, res) => {
+  console.log("User details in get participants:", req.user);
+  console.log("User ID:", req.user.id); // Log the user ID for debugging
+  try {
+    const participants = await Participant.find({
+      userId: req.user.id,
+    }).populate("eventId");
+
+    res.json({ participants });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
 
 module.exports = router;
