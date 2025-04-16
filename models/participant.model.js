@@ -1,4 +1,3 @@
-// models/participant.model.js
 
 const mongoose = require("mongoose");
 
@@ -16,7 +15,7 @@ const participantSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
+    enum: ["pending", "approved", "rejected", "waitlisted","withdrawn"], // Add 'waitlisted' here
     default: "pending",
   },
   eventId: {
@@ -34,7 +33,7 @@ const participantSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "User ",
     default: null,
   },
 });

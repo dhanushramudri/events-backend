@@ -213,53 +213,55 @@ router.post("/favorites/:id", authenticate, async (req, res) => {
 });
 
 // Register for an Event (user only)
-router.post("/register/:id", authenticate, async (req, res) => {
-  // console.log("Registering for event with ID:", req.params.id);
-  // console.log("User ID:", req.user.id);
-  // console.log("User name:", req.user.name);
-  // console.log("User email:", req.user.email);
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
+// router.post("/register/:id", authenticate, async (req, res) => {
+//   // console.log("Registering for event with ID:", req.params.id);
+//   // console.log("User ID:", req.user.id);
+//   // console.log("User name:", req.user.name);
+//   // console.log("User email:", req.user.email);
+//   try {
+//     const event = await Event.findById(req.params.id);
+//     if (!event) {
+//       return res.status(404).json({ message: "Event not found" });
+//     }
 
-    // Check if the event is already full
-    if (event.capacity <= event.participants.length) {
-      return res.status(400).json({ message: "Event is full" });
-    }
 
-    // Check if the user is already registered
-    const existingRegistration = await Participant.findOne({
-      eventId: req.params.id,
-      userId: req.user.id,
-    });
-    if (existingRegistration) {
-      return res.status(400).json({ message: "User already registered" });
-    }
 
-    // Register the user for the event
-    const newParticipant = new Participant({
-      eventId: req.params.id,
-      userId: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-    });
+//     // Check if the event is already full
+//     if (event.capacity <= event.participants.length) {
+//       return res.status(400).json({ message: "Event is full" });
+//     }
 
-    await newParticipant.save();
+//     // Check if the user is already registered
+//     const existingRegistration = await Participant.findOne({
+//       eventId: req.params.id,
+//       userId: req.user.id,
+//     });
+//     if (existingRegistration) {
+//       return res.status(400).json({ message: "User already registered" });
+//     }
 
-    // Update the event's participant count
-    event.participants.push(newParticipant._id);
-    await event.save();
+//     // Register the user for the event
+//     const newParticipant = new Participant({
+//       eventId: req.params.id,
+//       userId: req.user.id,
+//       name: req.user.name,
+//       email: req.user.email,
+//     });
 
-    res.json({
-      message: "Registration successful",
-      participant: newParticipant,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
+//     await newParticipant.save();
+
+//     // Update the event's participant count
+//     event.participants.push(newParticipant._id);
+//     await event.save();
+
+//     res.json({
+//       message: "Registration successful",
+//       participant: newParticipant,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// });
 
 // Unregister from an Event (user only)
 router.post("/unregister/:id", authenticate, async (req, res) => {
@@ -354,29 +356,24 @@ router.get(
     }
   }
 );
+
+// Join waitlist for an event (user only)
 // Join waitlist for an event (user only)
 router.post("/:id/waitlist", authenticate, async (req, res) => {
-  // console.log("req.user in waitlist", req.user); // Log the user object for debugging
+  console.log("req.user", req.user); // Log the user object for debugging
   try {
-    // console.log("req.user", req.body); 
+    console.log("req.body", req.body); 
     const event = await Event.findById(req.params.id);
-    const events = await Event.find({});
-    console.log(" event:", event); // Log all events for debugging
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
 
     // Check if already registered
-
-
     const existing = await Participant.findOne({
       eventId: event._id,
       userId: req.user.id,
     });
-const participants = await Participant.find({});
-    console.log("participants", participants); // Log all participants for debugging
-    // console.log("existing", existing); // Log the existing registration for debugging
 
     if (existing) {
       return res
@@ -384,26 +381,30 @@ const participants = await Participant.find({});
         .json({ message: "Already registered or in waitlist" });
     }
 
+    // Calculate queue position based on existing waitlisted participants
+    const waitlistedCount = await Participant.countDocuments({
+      eventId: event._id,
+      status: "pending", // Use 'pending' for waitlisted participants
+    });
+    const queuePosition = waitlistedCount + 1; // Position in the queue
+
     // Add to waitlist
     const waitlistEntry = new Participant({
       eventId: event._id,
       userId: req.user.id,
       name: req.user.name,
       email: req.user.email,
-      status: "waitlisted",
+      status: "pending", // Set status to 'pending'
+      queuePosition: queuePosition, // Set the calculated queue position
     });
-try {
-  await waitlistEntry.save();
-  console.log("Waitlist entry saved:", waitlistEntry); // Log the saved waitlist entry for debugging
-  
-} catch (error) {
-  console.log("Error saving waitlist entry:", error); // Log any errors during save
-  
-}
 
-    // Optionally, store waitlist references in the event document if needed
-    // event.waitlist.push(waitlistEntry._id);
-    // await event.save();
+    try {
+      await waitlistEntry.save();
+      console.log("Waitlist entry saved:", waitlistEntry); // Log the saved waitlist entry for debugging
+    } catch (error) {
+      console.log("Error saving waitlist entry:", error); // Log any errors during save
+      return res.status(500).json({ message: "Error saving waitlist entry", error: error.message });
+    }
 
     res.json({ message: "Added to waitlist", participant: waitlistEntry });
   } catch (error) {
@@ -411,5 +412,62 @@ try {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+// Join waitlist for an event (user only)
+// router.post("/:id/waitlist", authenticate, async (req, res) => {
+//   // console.log("req.user in waitlist", req.user); // Log the user object for debugging
+//   try {
+//     // console.log("req.user", req.body); 
+//     const event = await Event.findById(req.params.id);
+//     const events = await Event.find({});
+//     console.log(" event:", event); // Log all events for debugging
+
+//     if (!event) {
+//       return res.status(404).json({ message: "Event not found" });
+//     }
+
+//     // Check if already registered
+
+
+//     const existing = await Participant.findOne({
+//       eventId: event._id,
+//       userId: req.user.id,
+//     });
+// const participants = await Participant.find({});
+//     console.log("participants", participants); // Log all participants for debugging
+//     // console.log("existing", existing); // Log the existing registration for debugging
+
+//     if (existing) {
+//       return res
+//         .status(400)
+//         .json({ message: "Already registered or in waitlist" });
+//     }
+
+//     // Add to waitlist
+//     const waitlistEntry = new Participant({
+//       eventId: event._id,
+//       userId: req.user.id,
+//       name: req.user.name,
+//       email: req.user.email,
+//       status: "waitlisted",
+//     });
+// try {
+//   await waitlistEntry.save();
+//   console.log("Waitlist entry saved:", waitlistEntry); // Log the saved waitlist entry for debugging
+  
+// } catch (error) {
+//   console.log("Error saving waitlist entry:", error); // Log any errors during save
+  
+// }
+
+//     // Optionally, store waitlist references in the event document if needed
+//     // event.waitlist.push(waitlistEntry._id);
+//     // await event.save();
+
+//     res.json({ message: "Added to waitlist", participant: waitlistEntry });
+//   } catch (error) {
+//     console.error("Waitlist error:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// });
 
 module.exports = router;

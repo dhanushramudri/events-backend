@@ -60,11 +60,11 @@ async function initializeDatabase() {
         title: "Mongo Conference",
         category: "Conference",
         date: new Date("2025-04-20"),
-        registrationClosesAt: new Date("2025-04-15T23:59:59Z"),
+        registrationClosesAt: new Date("2025-04-18T23:59:59Z"),
         status: "upcoming",
         createdBy: admin._id,
         participantsCount: 0,
-        capacity: 5,
+        capacity: 1,
         autoApprove: true,
         description: "Annual conference for React developers",
         location: "San Francisco, CA",
@@ -187,52 +187,3 @@ async function initializeDatabase() {
 
 module.exports = { initializeDatabase };
 
-// Join waitlist for an event (user only)
-router.post("/:id/waitlist", authenticate, async (req, res) => {
-  console.log("req.user", req.user); // Log the user object for debugging
-  try {
-    console.log("req.body", req.body); 
-    const event = await Event.findById(req.params.id);
-    const events = await Event.find({});
-    console.log("event:", event); // Log all events for debugging
-
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
-
-    // Check if already registered
-    const existing = await Participant.findOne({
-      eventId: event._id,
-      userId: req.user.id,
-    });
-    const participants = await Participant.find({});
-    console.log("participants", participants); // Log all participants for debugging
-
-    if (existing) {
-      return res
-        .status(400)
-        .json({ message: "Already registered or in waitlist" });
-    }
-
-    // Add to waitlist
-    const waitlistEntry = new Participant({
-      eventId: event._id,
-      userId: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-      status: "waitlisted",
-    });
-
-    try {
-      await waitlistEntry.save();
-      console.log("Waitlist entry saved:", waitlistEntry); // Log the saved waitlist entry for debugging
-    } catch (error) {
-      console.log("Error saving waitlist entry:", error); // Log any errors during save
-    }
-
-    res.json({ message: "Added to waitlist", participant: waitlistEntry });
-  } catch (error) {
-    console.error("Waitlist error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});

@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 
 exports.authenticate = async (req, res, next) => {
-  console.log("req details in auth middleware");
+  // console.log("req details in auth middleware");
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -19,7 +19,7 @@ exports.authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const user = await User.findById(decoded.id);
-    console.log("user is ", user);
+    // console.log("user is ", user);
     if (!user) {
       return res.status(401).json({ message: "User  id not found" });
     }
