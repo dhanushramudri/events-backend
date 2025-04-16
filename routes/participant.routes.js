@@ -165,6 +165,35 @@ router.post("/events/:id/register", authenticate, async (req, res) => {
   }
 });
 
+// Get all participants for an event (admin only)
+router.get("/admin/events/:id/participants",
+  authenticate,
+  isAdmin,
+  async (req, res) => {
+    try {
+      const event = await Event.findById(req.params.id);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      const participants = await Participant.find({
+        eventId: req.params.id,
+      }).sort([
+        // Sort approved first, then by queue position
+        ["status", -1],
+        ["queuePosition", 1],
+      ]);
+
+      res.json({
+        participants,
+        event,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  }
+);
+
 router.post("/events/:id/withdraw",authenticate, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -224,57 +253,60 @@ router.post("/events/:id/withdraw",authenticate, async (req, res) => {
   }
 });
 // Get all participants for an event (admin only)
-router.post("/events/:id/withdraw", async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
 
-    const participant = await Participant.findOne({
-      userId: req.user._id, // Ensure to use the authenticated user's ID
-      eventId: req.params.id,
-    });
 
-    if (!participant) {
-      return res.status(404).json({ message: "Participant not found" });
-    }
 
-    // If already withdrawn, just return
-    if (participant.status === "withdrawn") {
-      return res.json({ message: "You have already withdrawn from this event", participant });
-    }
+// router.post("/events/:id/withdraw", async (req, res) => {
+//   try {
+//     const event = await Event.findById(req.params.id);
+//     if (!event) {
+//       return res.status(404).json({ message: "Event not found" });
+//     }
 
-    // If was approved, decrement event count
-    if (participant.status === "approved") {
-      event.participantsCount = Math.max(0, event.participantsCount - 1);
-      await event.save();
+//     const participant = await Participant.findOne({
+//       userId: req.user._id, // Ensure to use the authenticated user's ID
+//       eventId: req.params.id,
+//     });
 
-      // Handle auto-approval of next in line
-      await handleParticipantCancellation(req.params.id, participant._id);
-    }
+//     if (!participant) {
+//       return res.status(404).json({ message: "Participant not found" });
+//     }
 
-    // Update participant status to withdrawn
-    participant.status = "withdrawn";
-    participant.queuePosition = -1; // Reset queue position
-    await participant.save();
+//     // If already withdrawn, just return
+//     if (participant.status === "withdrawn") {
+//       return res.json({ message: "You have already withdrawn from this event", participant });
+//     }
 
-    // Update queue positions for remaining participants
-    const pendingParticipants = await Participant.find({
-      eventId: req.params.id,
-      status: "pending",
-    }).sort({ queuePosition: 1 });
+//     // If was approved, decrement event count
+//     if (participant.status === "approved") {
+//       event.participantsCount = Math.max(0, event.participantsCount - 1);
+//       await event.save();
 
-    for (let i = 0; i < pendingParticipants.length; i++) {
-      pendingParticipants[i].queuePosition = i + 1;
-      await pendingParticipants[i].save();
-    }
+//       // Handle auto-approval of next in line
+//       await handleParticipantCancellation(req.params.id, participant._id);
+//     }
 
-    res.json({ message: "You have successfully withdrawn from the event", participant });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
+//     // Update participant status to withdrawn
+//     participant.status = "withdrawn";
+//     participant.queuePosition = -1; // Reset queue position
+//     await participant.save();
+
+//     // Update queue positions for remaining participants
+//     const pendingParticipants = await Participant.find({
+//       eventId: req.params.id,
+//       status: "pending",
+//     }).sort({ queuePosition: 1 });
+
+//     for (let i = 0; i < pendingParticipants.length; i++) {
+//       pendingParticipants[i].queuePosition = i + 1;
+//       await pendingParticipants[i].save();
+//     }
+
+//     res.json({ message: "You have successfully withdrawn from the event", participant });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// });
 // Approve a participant (admin only)
 router.post(
   "/admin/events/:eventId/participants/:userId/approve",
