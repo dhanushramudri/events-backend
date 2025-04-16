@@ -1,6 +1,27 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+
+const messageSchema = new mongoose.Schema({
+  subject: {
+    type: String,
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User ",
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -38,7 +59,8 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-  },
+  }
+  ,  clientMessages: [messageSchema],
 });
 
 // Hash password before saving

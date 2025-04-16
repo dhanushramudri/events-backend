@@ -193,4 +193,51 @@ router.get("/favorites/check/:eventId", authenticate, async (req, res) => {
   }
 });
 
+
+// Contact admin route
+// Contact admin route
+router.post("/contact-admin", authenticate, async (req, res) => {
+  const { subject, message } = req.body;
+
+  if (!subject || !message) {
+    return res.status(400).json({ message: "Subject and message are required." });
+  }
+
+  try {
+    // Find the admin user (assuming there's only one admin)
+    const adminUser  = await User.findOne({ role: "admin" });
+    console.log("adminUser  before message:", adminUser );
+
+    if (!adminUser ) {
+      return res.status(404).json({ message: "Admin user not found." });
+    }
+
+    // Create a message object
+    const newMessage = {
+      subject,
+      content: message,
+      sender: req.user._id, // The ID of the user sending the message
+    };
+
+    // Push the new message into the admin's clientMessages array
+    adminUser .clientMessages.push(newMessage);
+
+    // Save the admin user
+    await adminUser.save();
+
+    // Fetch the admin user again to verify the message was added
+    const updatedAdminUser  = await User.findOne({ role: "admin" });
+    console.log("Updated adminUser  after message:", updatedAdminUser );
+
+    console.log("adminUser  after message:", updatedAdminUser.clientMessages);
+
+    res.json({ message: "Your message has been sent to the admin." , updatedAdminUser });
+  } catch (error) {
+    console.error("Error in contact-admin route:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+
+
 module.exports = router;
