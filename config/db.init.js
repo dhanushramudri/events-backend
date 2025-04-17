@@ -41,6 +41,7 @@ async function initializeDatabase() {
 
     // Hash the password for the regular user
     const userPassword = await bcrypt.hash("password123", 10);
+    console.log("hello")
 
     // Create regular user (override if exists)
     let user = await User.findOneAndUpdate(
