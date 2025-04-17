@@ -59,7 +59,7 @@ const events = await Event.insertMany([
   {
     title: "Mongo Conference",
     category: "Conference",
-    date: new Date("2025-04-20"),
+    date: new Date("2025-05-20"),
     registrationClosesAt: new Date("2025-04-18T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
@@ -72,7 +72,7 @@ const events = await Event.insertMany([
   {
     title: "Node.js Workshop",
     category: "Workshop",
-    date: new Date("2023-11-15"),
+    date: new Date("2025-11-15"),
     registrationClosesAt: new Date("2023-11-14T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
@@ -85,7 +85,7 @@ const events = await Event.insertMany([
   {
     title: "React Meetup",
     category: "Meetup",
-    date: new Date("2024-01-30"),
+    date: new Date("2025-05-30"),
     registrationClosesAt: new Date("2024-01-25T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
@@ -112,7 +112,7 @@ const events = await Event.insertMany([
   {
     title: "Cybersecurity Trends 2024",
     category: "Conference",
-    date: new Date("2024-05-12"),
+    date: new Date("2025-05-12"),
     registrationClosesAt: new Date("2024-05-10T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
@@ -125,7 +125,7 @@ const events = await Event.insertMany([
   {
     title: "Startup Pitch Night",
     category: "Networking",
-    date: new Date("2023-12-10"),
+    date: new Date("2025-12-10"),
     registrationClosesAt: new Date("2023-12-08T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
@@ -139,7 +139,7 @@ const events = await Event.insertMany([
   {
     title: "Python Beginner's Bootcamp",
     category: "Bootcamp",
-    date: new Date("2023-11-20"),
+    date: new Date("2025-11-20"),
     registrationClosesAt: new Date("2023-11-19T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
@@ -153,7 +153,7 @@ const events = await Event.insertMany([
   {
     title: "Blockchain 101",
     category: "Workshop",
-    date: new Date("2024-03-18"),
+    date: new Date("2025-04-18"),
     registrationClosesAt: new Date("2024-03-16T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
@@ -167,7 +167,7 @@ const events = await Event.insertMany([
   {
     title: "Serverless Architecture Hackathon",
     category: "Hackathon",
-    date: new Date("2025-02-25"),
+    date: new Date("2025-04-25"),
     registrationClosesAt: new Date("2025-02-23T23:59:59Z"),
     status: "upcoming",
     createdBy: admin._id,
