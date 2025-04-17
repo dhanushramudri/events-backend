@@ -69,6 +69,19 @@ async function initializeDatabase() {
         description: "Annual conference for React developers",
         location: "San Francisco, CA",
       },
+      {
+        title: "Mongo Conference",
+        category: "Conference",
+        date: new Date("2025-04-22"),
+        registrationClosesAt: new Date("2025-04-20T23:59:59Z"),
+        status: "upcoming",
+        createdBy: admin._id,
+        participantsCount: 0,
+        capacity: 1,
+        autoApprove: true,
+        description: "Annual conference for React developers",
+        location: "San Francisco, CA",
+      },
     ]);
 
     // Register participants with queue position logic
