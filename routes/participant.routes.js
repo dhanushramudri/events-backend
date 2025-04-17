@@ -87,6 +87,7 @@ router.post("/events/:id/register", authenticate, async (req, res) => {
     // Check if registration is closed
     const now = new Date();
     const closingTime = new Date(event.registrationClosesAt);
+    console.log(now, closingTime);
     if (now > closingTime) {
       return res
         .status(400)
