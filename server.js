@@ -19,8 +19,7 @@ const { initializeDatabase } = require("./config/db.init");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI =
-  "mongodb+srv://firstproject:q93QiLiq0fOLkuPb@cluster0.06bmzbf.mongodb.net/?retryWrites=true&w=majority&appName=cluster0"
+const MONGODB_URI = process.env.MONGODB_URI 
 
 // CORS Options to allow credentials and specific origins
 const allowedOrigins = [

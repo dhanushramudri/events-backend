@@ -15,6 +15,7 @@ const ADMIN_PASSWORD = "admin123";
 // Ensure jwt is required
 
 router.post("/login", async (req, res) => {
+  
   console.log("Login request received:", req.body);
 
   try {

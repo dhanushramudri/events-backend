@@ -216,7 +216,10 @@ router.post("/contact-admin", authenticate, async (req, res) => {
     const newMessage = {
       subject,
       content: message,
-      sender: req.user._id, // The ID of the user sending the message
+      sender: req.user._id, 
+      createdAt: new Date(),
+      email: req.user.email, // Add the sender's email to the message
+      name: req.user.name, // Add the sender's name to the message
     };
 
     // Push the new message into the admin's clientMessages array
